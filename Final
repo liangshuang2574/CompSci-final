@@ -1,0 +1,251 @@
+import js as p5
+print('Assignment #7 (Final Project)')
+
+font = p5.loadFont('Minecraft.ttf')
+
+class Platform:
+  def __init__(self, x, y, width):
+      self.x = x
+      self.y = y
+      self.width = width
+      self.height = 12  # 平台的高度是统一的
+
+  def draw(self):
+      p5.rect(self.x, self.y, self.width, self.height)
+
+
+platforms = [
+  Platform(210, 50, 75),
+  Platform(75, 72, 90),
+  Platform(0, 110, 50),
+  Platform(190, 110, 30),
+  Platform(20, 160, 130),
+  Platform(230, 160, 45),
+  Platform(130, 210, 80),
+  Platform(0, 260, 45),
+  Platform(75, 260, 60),
+  Platform(180, 260, 120),
+]
+
+bird_x = 20
+bird_y = 240
+bird_w = 20
+bird_h = 20
+
+dest_x = 250
+dest_y = 30
+dest_w = 20
+dest_h = 20
+
+program_state = 'START'
+
+
+
+
+def setup():
+  p5.createCanvas(300, 300)  
+
+def draw():
+  p5.background(38, 37, 38)   
+  p5.fill(255, 96, 195)  
+
+  if (program_state == 'PLAY'):
+    cursor_xy = (int(p5.mouseX), int(p5.mouseY))
+    p5.textSize(14)
+    p5.text(cursor_xy, 45, 20)  # cursor (x, y) 
+    p5.noStroke()
+    
+    for platform in platforms:
+      platforms_draw()
+
+    frame_draw()
+    bird_draw()
+    bird_update()
+    destination_draw()
+    destination_arrive()
+
+
+  elif (program_state == 'START'):
+    p5.textFont(font)
+    p5.textSize(24)
+    p5.textAlign(p5.CENTER)
+    p5.fill(250, 180, 50)
+    p5.text('Click to Start', 150, 150)
+
+  elif (program_state == 'WIN'):
+    p5.textSize(24)
+    p5.fill(255, 96, 195)  
+    p5.text('You Win', 150, 150)
+
+  elif (program_state == 'LOOSE'):
+    p5.textSize(24)
+    p5.text('Game Over', 150, 150)
+
+
+
+
+
+
+
+# event function below need to be included,
+# even if they don't do anything
+def keyPressed(event):
+  global bird_y, program_state
+  if (program_state == 'PAUSE'):
+    if (p5.key == ' '):
+      program_state = 'PLAY' 
+  elif (program_state == 'PLAY'):
+    if (p5.key == ' '):
+      bird_y -= 20
+
+
+def keyReleased(event):
+  #print('keyReleased.. ' + str(p5.key))
+  pass
+
+def mousePressed(event):
+  #print('mousePressed..')
+  global program_state
+  if (program_state == 'START'):
+    program_state = 'PLAY'
+  elif (program_state == 'PAUSE'):
+    program_state = 'PLAY'
+  elif (program_state == 'PLAY'):
+    program_state = 'PAUSE'
+  elif (program_state == 'LOOSE'):
+    reset_game()
+  print(program_state)
+
+def mouseReleased(event):
+  #print('mouseReleased..')
+  pass
+
+
+
+
+def platforms_draw():
+  p5.rect(210, 50, 75, 12),
+  p5.rect(75, 72, 90, 12),
+  p5.rect(0, 110, 50, 12),
+  p5.rect(190, 110, 30, 12),
+  p5.rect(20, 160, 130, 12),
+  p5.rect(230, 160, 45, 12),
+  p5.rect(130, 210, 80, 12),
+  p5.rect(0, 260, 45, 12),
+  p5.rect(75, 260, 60, 12),
+  p5.rect(180, 260, 120, 12),
+
+
+def frame_draw():
+  p5.rect(0, 0, 2, 300)
+  p5.rect(298, 0, 2, 300)
+  p5.rect(0, 0, 300, 2)
+  p5.rect(0, 298, 300, 2)
+
+
+def destination_draw():
+  global dest_x, dest_y, dest_h, dest_w
+  p5.push()
+  p5.fill(250, 180, 50)
+  p5.translate(dest_x, dest_y)
+  p5.rect(0, 0, dest_h, dest_w)
+  p5.pop()
+
+
+def bird_draw():
+  global bird_x, bird_y
+  p5.push()
+  p5.translate(bird_x, bird_y)
+  p5.fill(250, 180, 50)
+  p5.ellipse(0, 0, bird_w, bird_h)
+  p5.imageMode(p5.CENTER)
+  p5.pop()
+
+  if (program_state == 'PLAY'):
+    if p5.keyIsPressed:
+        move_x = 0
+        move_y = 0
+        if p5.keyIsDown(p5.LEFT_ARROW):
+            move_x -= 1
+        if p5.keyIsDown(p5.RIGHT_ARROW):
+            move_x += 1
+        if p5.keyIsDown(p5.UP_ARROW):
+            move_y -= 3
+        bird_x += move_x
+        bird_y += move_y
+
+
+def destination_arrive():
+  bird_left = bird_x - bird_w / 2
+  bird_right = bird_x + bird_w / 2
+  bird_top = bird_y - bird_h / 2
+  bird_bottom = bird_y + bird_h / 2
+
+  dest_left = dest_x
+  dest_right = dest_x + dest_w
+  dest_top = dest_y
+  dest_bottom = dest_y + dest_h
+
+  if (bird_right > dest_left and
+      bird_left < dest_right and
+      bird_bottom > dest_top and
+      bird_top < dest_bottom):
+      return True
+  return False
+
+
+def bird_update():
+  global bird_x, bird_y, program_state
+  if (program_state == 'PLAY'):
+    bird_falling = True
+    bird_rising = False
+
+    # Check if the bird is moving upwards:
+    if p5.keyIsPressed and p5.keyIsDown(p5.UP_ARROW):
+      bird_rising = True
+
+    for platform in platforms:
+      platform_top = platform.y
+      platform_bottom = platform.y + platform.height
+      platform_left = platform.x
+      platform_right = platform.x + platform.width
+
+      bird_bottom = bird_y + bird_h/2
+      bird_top = bird_y - bird_h/2
+      bird_left = bird_x - bird_w/4
+      bird_right = bird_x + bird_w/4
+
+      # Check if the bird is on the platform to stop falling:
+      if (bird_bottom >= platform_top) and (bird_bottom <= platform_bottom):
+          if (bird_right >= platform_left) and (bird_left <= platform_right):
+              bird_falling = False
+              break
+
+      # Check if the bird hits the bottom of the platform while rising:
+      if bird_rising and \
+        (bird_top <= platform_bottom) and (bird_top >= platform_top):
+          if bird_right >= platform_left and bird_left <= platform_right:
+              bird_y = platform_bottom + bird_h/2
+              bird_rising = False
+              break
+
+    if bird_falling:
+      bird_y += 1
+    if (bird_y < 0 + bird_h/2) or (bird_y >= p5.height - bird_h/2) or \
+       (bird_x < 0 + bird_w/2) or (bird_x >= p5.width - bird_w/2):
+      game_over()
+
+  if destination_arrive():
+    program_state = 'WIN'
+
+
+def game_over():
+  global program_state
+  program_state = 'LOOSE'
+
+
+def reset_game():
+  global program_state, bird_x, bird_y
+  program_state = 'START'
+  bird_x = 20
+  bird_y = 240
